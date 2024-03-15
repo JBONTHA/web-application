@@ -1,0 +1,100 @@
+package com.example.demo.model;
+
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
+
+public class User {
+    @NotBlank(message = "Name is required")
+    private String name;
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    private String email;
+
+    @NotNull(message = "Age is required")
+    @Min(value = 1, message = "Age must be a positive integer")
+    private Integer age;
+
+    @NotNull(message = "Date of Birth is required")
+    private LocalDate dob;
+
+    // Getters and setters
+}
+package com.example.demo.controller;
+
+import com.example.demo.model.User;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    private List<User> userList = new ArrayList<>();
+
+    @GetMapping("/")
+    public ResponseEntity<List<User>> getUsers() {
+        return new ResponseEntity<>(userList, HttpStatus.OK);
+    }
+
+    @PostMapping("/")
+    public ResponseEntity<String> addUser(@Valid @RequestBody User user, BindingResult result) {
+        if (result.hasErrors()) {
+            return new ResponseEntity<>("Invalid input: " + result.getAllErrors().get(0).getDefaultMessage(), HttpStatus.BAD_REQUEST);
+        }
+
+        // Additional validation logic if needed
+        userList.add(user);
+        return new ResponseEntity<>("User added successfully", HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<String> updateUser(@PathVariable("id") int id, @Valid @RequestBody User updatedUser, BindingResult result) {
+        if (result.hasErrors()) {
+            return new ResponseEntity<>("Invalid input: " + result.getAllErrors().get(0).getDefaultMessage(), HttpStatus.BAD_REQUEST);
+        }
+
+        if (id >= 0 && id < userList.size()) {
+            User existingUser = userList.get(id);
+            existingUser.setName(updatedUser.getName());
+            existingUser.setEmail(updatedUser.getEmail());
+            existingUser.setAge(updatedUser.getAge());
+            existingUser.setDob(updatedUser.getDob());
+            return new ResponseEntity<>("User updated successfully", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("User not found with ID: " + id, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable("id") int id) {
+        if (id >= 0 && id < userList.size()) {
+            userList.remove(id);
+            return new ResponseEntity<>("User deleted successfully", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("User not found with ID: " + id, HttpStatus.NOT_FOUND);
+        }
+    }
+}
+package com.example.demo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+}
