@@ -38,6 +38,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
+@crossorigin("https://frontend url")
 public class UserController {
 
     private List<User> userList = new ArrayList<>();
